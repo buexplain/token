@@ -5,8 +5,8 @@
 1. 本token组件类似于session，服务端存储数据，token下发给客户端
 2. 本token组件设计了一个双层数据存储的结构，一个唯一id可以存储数据，根据该id生成的token也可以存储数据。
    此特性可以实现多设备登录、互剔、多设备共享数据等。
-3. 如果对token只读，则在请求结束时不会写数据。
-4. 对token进行读写不会改变token的过期时间，客户端需要调用服务端的`refresh`方法，重写获取token。
+3. 根据token只读数据时，不会产生落库操作。
+4. 根据token对数据进行读写，不会改变token的有效期，需要实现token刷新的接口。
 
 ## 安装
 
@@ -15,30 +15,30 @@
 **发布token组件的配置** `php bin/hyperf.php vendor:publish buexplain/token`
 
 **使用**
+
 路由代码：
+
 ```php
 use Hyperf\HttpServer\Router\Router;
+//签发token
+Router::post('/in', \App\Controller\IndexController::class.'@in');
 Router::addGroup('',function () {
-    //签发token
-    Router::post('/in', \App\Controller\IndexController::class.'@in');
-    Router::addGroup('',function () {
-        //销毁token
-        Router::get('/out', \App\Controller\IndexController::class.'@out');
-        //刷新token
-        Router::post('/refresh', \App\Controller\IndexController::class.'@refresh');
-    }, [
-        'middleware' => [
-            \Token\Middleware\AuthMiddleware::class,
-        ]
-    ]);
+    //销毁token
+    Router::get('/out', \App\Controller\IndexController::class.'@out');
+    //刷新token
+    Router::post('/refresh', \App\Controller\IndexController::class.'@refresh');
 }, [
     'middleware' => [
+        //先执行token初始化的中间件
         \Token\Middleware\TokenMiddleware::class,
+        //后执行token权限校验的中间件
+        \Token\Middleware\AuthMiddleware::class,
     ]
 ]);
 ```
 
 控制器代码：
+
 ```php
 use Hyperf\HttpServer\Contract\RequestInterface;
 use Hyperf\Di\Annotation\Inject;
@@ -62,21 +62,30 @@ class IndexController
     }
 
     /**
-     *  登录
+     *  签发
      */
     public function in()
     {
+        //假设用户唯一id
+        $userId = 1;
+        /**
+         * @var $m \Token\TokenManager
+         */
+        $manager = \Hyperf\Utils\ApplicationContext::getContainer()->get(\Token\TokenManager::class);
+        $token = $manager->start($this->request);
+        //设置用户唯一id
+        $token->setId($userId);
+        //根据用户唯一id载入数据
+        $token->load();
+        //获取客户端传递的设备信息
         $device = $this->request->query('device', 'pc');
-        $token = self::getToken();
+        //判断是否已经登录了此类设备
         $names = $token->getNames();
         foreach ($names as $name) {
             if($name->get('device') == $device) {
                 throw new \Token\Exception\UnauthorizedException("您已经登录了设备：{$device}");
             }
         }
-        //设置用户唯一id
-        $userId = 1;
-        $token->setId($userId);
         //记录用户最后登录时间与设备
         $token->set('last_login_time', time());
         $token->set('last_login_device', $device);
@@ -93,10 +102,11 @@ class IndexController
     }
     
     /**
-     *  退出登录
+     *  销毁
      */
     public function out()
     {
+        //销毁所有的设备的token
         self::getToken()->destroyAll();
         return [
             'code'=>0,
@@ -105,7 +115,7 @@ class IndexController
     }
     
     /**
-     *  刷新token
+     *  刷新
      */    
     public function refresh()
     {

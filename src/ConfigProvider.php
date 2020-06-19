@@ -14,9 +14,6 @@ class ConfigProvider
                 \Token\Handler\RedisHandler::class => \Token\Handler\RedisHandlerFactory::class,
                 \Token\Contract\TokenInterface::class => \Token\TokenProxy::class,
             ],
-            'middlewares'=>[
-                \Token\Middleware\TokenMiddleware::class,
-            ],
             'publish' => [
                 [
                     'id' => 'config',
