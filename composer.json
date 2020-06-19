@@ -1,0 +1,55 @@
+{
+  "name": "buexplain/token",
+  "type": "library",
+  "keywords": [
+    "php",
+    "swoole",
+    "hyperf",
+    "token"
+  ],
+  "description": "这个是一个基于hyperf的token组件",
+  "license": "Apache-2.0",
+  "require": {
+    "php": ">=7.2",
+    "hyperf/utils": "*",
+    "hyperf/redis": "*",
+    "hyperf/contract": "*",
+    "hyperf/http-server": "*",
+    "psr/http-message": "*",
+    "psr/http-server-middleware": "*",
+    "ext-json": "*"
+  },
+  "minimum-stability": "stable",
+  "autoload": {
+    "psr-4": {
+      "Token\\": "src/"
+    }
+  },
+  "require-dev": {
+    "swoft/swoole-ide-helper": "^4.2",
+    "friendsofphp/php-cs-fixer": "^2.14",
+    "mockery/mockery": "^1.0",
+    "phpunit/phpunit": "^7.0",
+    "hyperf/di": "*"
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "TokenTest\\": "tests/"
+    }
+  },
+  "scripts": {
+    "cs-fix": "php-cs-fixer fix ./src",
+    "test": "phpunit --configuration phpunit.xml --colors=always"
+  },
+  "extra": {
+    "hyperf": {
+      "config": "Token\\ConfigProvider"
+    }
+  },
+  "repositories": {
+    "packagist": {
+      "type": "composer",
+      "url": "https://mirrors.aliyun.com/composer"
+    }
+  }
+}
