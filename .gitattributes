@@ -1,2 +1,2 @@
 /tests export-ignore
-/phpunit.xml export-ignore
+phpunit.xml export-ignore

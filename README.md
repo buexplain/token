@@ -74,7 +74,7 @@ class IndexController
         $manager = \Hyperf\Utils\ApplicationContext::getContainer()->get(\Token\TokenManager::class);
         $token = $manager->start($this->request);
         //设置用户唯一id
-        $token->setId($userId);
+        $token->setId((string)$userId);
         //根据用户唯一id载入数据
         $token->load();
         //获取客户端传递的设备信息
@@ -93,6 +93,8 @@ class IndexController
         $token->getName()->set('device', $device);
         //构造返回值
         $data = ['token'=>(string)$token->getName(), 'expire'=>$token->getName()->expire(), 'sysTime'=>time()];
+        //getName后主动落库
+        $token->save();
         //返回
         return [
             'code'=>0,
@@ -120,6 +122,7 @@ class IndexController
     public function refresh()
     {
         $token = self::getToken();
+        $token->getName()->refresh();
         $data = ['token'=>(string)$token->getName(), 'expire'=>$token->getName()->expire(), 'sysTime'=>time()];
         return [
             'code'=>0,
