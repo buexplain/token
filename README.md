@@ -69,7 +69,7 @@ class IndexController
         //假设用户唯一id
         $userId = 1;
         /**
-         * @var $m \Token\TokenManager
+         * @var $manager \Token\TokenManager
          */
         $manager = \Hyperf\Utils\ApplicationContext::getContainer()->get(\Token\TokenManager::class);
         $token = $manager->start($this->request);
